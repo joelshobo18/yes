@@ -11,7 +11,7 @@ WORDS = [
 
 def test_parse_markup_colours_words():
     out = _parse_markup("BY #DAY 30# you're *comfortable* !not!", COLORS)
-    assert out == [("BY", "#FFFFFF"), ("DAY", "#FFE01B"), ("30", "#FFE01B"), ("you're", "#3CFF3C"), ("not", "#FF2B2B")]
+    assert out == [("BY", "#FFFFFF"), ("DAY", "#FFE01B"), ("30", "#FFE01B"), ("you're", "#FFFFFF"), ("comfortable", "#3CFF3C"), ("not", "#FF2B2B")]
 
 
 def test_time_chunks_matches_in_order_and_skips_hook():
