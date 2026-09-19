@@ -17,8 +17,8 @@ def test_parse_markup_colours_words():
 def test_time_chunks_matches_in_order_and_skips_hook():
     chunks = [Chunk("BY #DAY THIRTY#"), Chunk("YOUR SHOTS")]  # first chunk skips the hook sentence
     timed = time_chunks(chunks, WORDS, COLORS)
-    assert timed[0].start == 3.7 and abs(timed[0].end - (4.6 - 0.02)) < 1e-6  # held until next chunk
-    assert timed[1].start == 4.6 and timed[1].end > 5.0
+    assert timed[0].start == 3.7 and abs(timed[0].end - (4.6 - 0.001)) < 1e-6  # held until the next chunk starts
+    assert timed[1].start == 4.6 and abs(timed[1].end - 5.6) < 1e-6
 
 
 def test_crop_expr_positions_window():

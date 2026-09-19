@@ -19,17 +19,24 @@
 
 | file | source | used for |
 |---|---|---|
-| `mbappe_tech.mp4` | youtube GegZ1rOeX-M (0-120s) | Mbappé slow-mo strike, plant foot, net; small burned-in captions wiped with `delogo` |
-| `psg_session.mp4` | youtube szkU_PwTgUk | training-ground shooting (weeks 3-4, app beat, "our players") |
+| `mbappe_tech.mp4` | youtube GegZ1rOeX-M (0-120s) | hook side-on strike, POV run-up, legs close-ups, ball into the net; analyst captions wiped with `delogo` |
+| `mbappe_pack.mp4` | youtube DLbM1_Or4fI (4K scene pack) | in-game dribble, celebrations, shot + goal |
+| `psg_session.mp4` | youtube szkU_PwTgUk | training-ground shooting (weeks 3-4) |
 | `barefoot.mp4` | youtube Cjmb90TjVbQ (30-100s) | week one barefoot juggling |
 | `bridge.mp4` | youtube xxlixggAenk | week two single-leg bridge |
+| `fascia_anatomy.png` | generated (GPT Image) | "glute, hamstring, calf, foot" anatomy render with push-in |
 
 Word timestamps come from faster-whisper (`small`) on the supplied MP3 (`vo_words.json`).
-Fonts: Montserrat Black / ExtraBold Italic (OFL) in `--fonts`.
+Fonts (`--fonts`): `bold/THEBOLDFONT-FREEVERSION.ttf` (captions, titles, CTA), Montserrat Black / ExtraBold Italic (card body).
+Emoji (`--emoji`): Apple emoji PNGs named by codepoint (e.g. `1f525.png`) from the `emoji-data` set.
 
 ```bash
 python examples/instinctfooty/build_04_power.py --src SRC --vo 04_POWER_fascia.mp3 --words vo_words.json \
-    --fonts fonts/ --work work04/ --out 04_POWER_fascia-30-days.mp4
-# tweak the arrow / circles without re-rendering segments:
-#   --arrow 640,330 --circle 860,1400,200 --circle2 520,1420,210
+    --fonts fonts/ --emoji emoji160/ --work work04b/ --out 04_POWER_fascia-30-days.mp4
+# tracker keyframes (time,x,y;...) measured on the rendered hook / legs segments, tweakable without re-rendering:
+#   --head "1.0,690,170;1.5,760,170;2.0,790,175;2.5,815,210;3.1,780,200"
+#   --ball "1.0,110,1540;1.5,325,1540;2.0,630,1540;2.5,670,1500;3.1,810,1440"
+#   --leg  "18.36,420,1400;18.86,500,1380;19.36,600,1360;20.14,700,1320"
 ```
+
+See `STYLE.md` for the frame-by-frame breakdown of the reference and how each rule maps to the renderer.
