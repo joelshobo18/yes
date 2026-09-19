@@ -1,0 +1,24 @@
+# Horizontal long-form (YouTube): slower pacing, line captions at the bottom.
+name: youtube
+description: 16:9 1080p, 30fps, 5-8s scenes, subtitle-style captions.
+canvas: { width: 1920, height: 1080, fps: 30 }
+layout: broll
+max_duration: null
+pacing: { min_scene: 3.0, target_scene: 6.0, max_scene: 9.0 }
+clips:
+  orientation: auto
+  providers: [local, pexels, pixabay, youtube]
+  min_clip_duration: 3.0
+captions:
+  enabled: true
+  mode: line
+  size: 56
+  position: bottom
+  margin_v: 80
+  max_words: 7
+  max_chars: 42
+  uppercase: false
+audio:
+  loudnorm: true
+  target_lufs: -14
+  music_volume: 0.08

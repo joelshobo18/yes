@@ -1,0 +1,8 @@
+# Vertical talking-head with b-roll on the top half and the camera on the bottom half.
+extends: tiktok
+name: talking-head
+description: 9:16, camera footage on the bottom half, matched b-roll on the top half.
+layout: split
+captions:
+  position: center
+  size: 72

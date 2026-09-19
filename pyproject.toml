@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autocut"
+version = "0.1.0"
+description = "Automatic video editing: trim dead air, transcribe, find matching b-roll online, render to a format."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "pyyaml>=6",
+    "requests>=2.28",
+    "imageio-ffmpeg>=0.4",
+]
+
+[project.optional-dependencies]
+youtube = ["yt-dlp>=2024.1.1"]
+whisper = ["faster-whisper>=1.0"]
+llm = ["anthropic>=1.0"]
+dev = ["pytest>=7"]
+all = ["yt-dlp>=2024.1.1", "faster-whisper>=1.0", "anthropic>=1.0"]
+
+[project.scripts]
+autocut = "autocut.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["autocut*"]
+
+[tool.setuptools.package-data]
+autocut = ["formats/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

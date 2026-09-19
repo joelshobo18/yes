@@ -1,0 +1,25 @@
+# Vertical short-form (TikTok / Reels / Shorts): fast cuts, big word-by-word captions.
+name: tiktok
+description: 9:16 vertical, 30fps, punchy 3-4s scenes, karaoke-style captions, max 60s.
+canvas: { width: 1080, height: 1920, fps: 30 }
+layout: broll
+max_duration: 60
+pacing: { min_scene: 1.5, target_scene: 3.0, max_scene: 5.0 }
+clips:
+  orientation: auto
+  providers: [local, pexels, pixabay, youtube]
+  min_clip_duration: 1.5
+  avoid_repeat_within: 4
+captions:
+  enabled: true
+  mode: word
+  size: 84
+  position: center
+  max_words: 3
+  max_chars: 16
+  uppercase: true
+  highlight_color: "#FFD400"
+audio:
+  loudnorm: true
+  target_lufs: -14
+  music_volume: 0.10

@@ -1,0 +1,14 @@
+# Square feed post (Instagram / LinkedIn).
+name: square
+description: 1:1 1080p, 30fps, medium pacing, centred captions.
+canvas: { width: 1080, height: 1080, fps: 30 }
+layout: broll
+max_duration: 90
+pacing: { min_scene: 2.0, target_scene: 4.0, max_scene: 6.0 }
+captions:
+  enabled: true
+  mode: word
+  size: 64
+  position: bottom
+  margin_v: 100
+  max_words: 4
