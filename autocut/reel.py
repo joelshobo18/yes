@@ -44,6 +44,7 @@ class Segment:
     delogo: tuple[int, int, int, int] | None = None  # x, y, w, h in SOURCE pixels
     interpolate: bool = True
     image: bool = False  # still image with a Ken Burns push-in (duration required)
+    fit: str = "cover"  # stills: cover (fill + crop) | contain (fit to width over a blurred, darkened copy)
     label: str = ""
 
     @property
@@ -118,6 +119,7 @@ class ReelSpec:
     bw_ranges: list[tuple[float, float]] = field(default_factory=list)
     captions_until: float | None = None
     total: float | None = None
+    post: str = ""  # ffmpeg filters applied to the finished picture before captions (e.g. vignette / grade)
 
     def cut_times(self) -> list[float]:
         t = self.video_offset
@@ -154,12 +156,20 @@ def render_segment(seg: Segment, out: Path, log: Logger = print) -> Path:
     n = max(1, int(round(tl * FPS)))
     if seg.image:
         z = seg.zoom or 0.10
-        vf = (
-            f"scale={W * 1.3:.0f}:{H * 1.3:.0f}:force_original_aspect_ratio=increase,crop={W * 1.3:.0f}:{H * 1.3:.0f},"
-            f"zoompan=z='1+{z:.4f}*on/{n}':d=1:s={W}x{H}:fps={FPS}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',setsar=1,format=yuv420p"
-        )
-        args = ["-y", "-loop", "1", "-framerate", str(FPS), "-t", f"{tl:.3f}", "-i", seg.src, "-vf", vf, "-t", f"{tl:.3f}",
-                "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-r", str(FPS), str(out)]
+        bw_, bh_ = int(W * 1.3), int(H * 1.3)
+        zp = f"zoompan=z='1+{z:.4f}*on/{n}':d=1:s={W}x{H}:fps={FPS}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)',setsar=1,format=yuv420p"
+        if seg.fit == "contain":
+            fc = (
+                f"[0:v]split[bg][fg];"
+                f"[bg]scale={bw_}:{bh_}:force_original_aspect_ratio=increase,crop={bw_}:{bh_},boxblur=40:4,eq=brightness=-0.25[bgb];"
+                f"[fg]scale={bw_}:-2[fgs];[bgb][fgs]overlay=(W-w)/2:(H-h)/2,{zp}"
+            )
+            args = ["-y", "-loop", "1", "-framerate", str(FPS), "-t", f"{tl:.3f}", "-i", seg.src, "-filter_complex", fc,
+                    "-t", f"{tl:.3f}", "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-r", str(FPS), str(out)]
+        else:
+            vf = f"scale={bw_}:{bh_}:force_original_aspect_ratio=increase,crop={bw_}:{bh_},{zp}"
+            args = ["-y", "-loop", "1", "-framerate", str(FPS), "-t", f"{tl:.3f}", "-i", seg.src, "-vf", vf, "-t", f"{tl:.3f}",
+                    "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-r", str(FPS), str(out)]
         log(f"segment {out.name}: still {Path(seg.src).name} -> {tl:.2f}s")
         ffmpeg.run(args)
         return out
@@ -244,11 +254,24 @@ def time_chunks(chunks: list[Chunk], words: list[dict], colors: dict) -> list[Ch
         toks = [_norm(w) for w, _ in parse_markup(c.text, colors) if w != "\\N"]
         first = last = None
         for k, tok in enumerate(toks):
-            j, found = wi, None
+            j, found, span = wi, None, 1
             window = 16 if k == 0 else 6
             while j < len(words) and j < wi + window:
                 tw = _norm(words[j]["w"])
-                if tw == tok or NUMBER_WORDS.get(tw) == tok or NUMBER_WORDS.get(tok) == tw or (len(tok) > 3 and (tw.startswith(tok) or tok.startswith(tw))):
+                if tw == tok or NUMBER_WORDS.get(tw) == tok or NUMBER_WORDS.get(tok) == tw:
+                    found = j
+                    break
+                # a chunk word may be split across 2-3 transcript tokens ("x-ray" -> "x" + "-ray", "£1.1" -> "£1" + ".1")
+                joined = tw
+                for extra in (1, 2):
+                    if j + extra < len(words):
+                        joined += _norm(words[j + extra]["w"])
+                        if joined == tok:
+                            found, span = j, extra + 1
+                            break
+                if found is not None:
+                    break
+                if len(tok) > 3 and (tw.startswith(tok) or tok.startswith(tw)):
                     found = j
                     break
                 j += 1
@@ -256,8 +279,8 @@ def time_chunks(chunks: list[Chunk], words: list[dict], colors: dict) -> list[Ch
                 continue
             if first is None:
                 first = found
-            last = found
-            wi = found + 1
+            last = found + span - 1
+            wi = last + 1
         if first is None:
             raise ValueError(f"could not time chunk {c.text!r} against transcript near word {wi}")
         c.start, c.end = float(words[first]["s"]), float(words[last]["e"])
@@ -442,6 +465,9 @@ def render(spec: ReelSpec, log: Logger = print) -> Path:
     if flashes:
         f.append(f"[{cur}]eq=brightness='{_flash_expr(flashes)}':eval=frame[vfl]")
         cur = "vfl"
+    if spec.post:
+        f.append(f"[{cur}]{spec.post}[vpost]")
+        cur = "vpost"
     fontsdir = f":fontsdir='{ffmpeg.escape_filter_path(spec.fontsdir)}'" if spec.fontsdir else ""
     f.append(f"[{cur}]ass='{ffmpeg.escape_filter_path(str(ass_path))}'{fontsdir}[vout]")
     f.append(f"[{n}:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[aout]")
